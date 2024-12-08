@@ -11,6 +11,17 @@ if "dag_naam" not in st.session_state:
 if "dagen" not in st.session_state:
     st.session_state["dagen"] = 0
 
+# Woordenboek voor dagvertaling
+dagen_vertaling = {
+    "Monday": "Maandag",
+    "Tuesday": "Dinsdag",
+    "Wednesday": "Woensdag",
+    "Thursday": "Donderdag",
+    "Friday": "Vrijdag",
+    "Saturday": "Zaterdag",
+    "Sunday": "Zondag",
+}
+
 # Functie om uren te tonen
 def show_uren():
     if st.session_state["lijst"]:
@@ -25,11 +36,16 @@ def show_uren():
 
 # Functie om een datum te kiezen
 def dag():
-    st.write("Kies een datum:")
-    datum_input = st.date_input("Selecteer een datum", key="datum_input")
-    if datum_input:
-        st.session_state["dag_naam"] = datum_input.strftime("%A %d %b")
-        st.write(f"Gekozen datum: {st.session_state['dag_naam']}")
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.write("Kies een datum:")
+        datum_input = st.date_input("Selecteer een datum", key="datum_input")
+        if datum_input:
+            dag_engels = datum_input.strftime("%A")
+            dag_nederlands = dagen_vertaling.get(dag_engels, dag_engels)
+            st.session_state["dag_naam"] = f"{dag_nederlands} {datum_input.strftime('%d %b')}"
+            st.write(f"Gekozen datum: {st.session_state['dag_naam']}")
 
 # Functie om alles te resetten
 def reset_data():
@@ -42,18 +58,21 @@ def reset_data():
 # Streamlit interface
 st.title("Werkuren Berekening")
 
-
 # Keuze tussen met of zonder pauze
 st.header("Werkdag invoeren:")
 dag_type = st.radio("Kies het type werkdag:", ["Met pauze", "Zonder pauze"], key="dag_type")
 dag()
 
 # Dynamische invoervelden afhankelijk van keuze
+col1, col2 = st.columns(2)
+
 if dag_type == "Met pauze":
-    begin_tijd = st.slider("Begin tijd:", 7.0, 21.0, 9.0, 0.5, key="begin_tijd_p")
-    pauze_start = st.slider("Pauze begint om:", 11.0, 20.0, 12.0, 0.5, key="pauze_start")
-    pauze_eind = st.slider("Pauze eindigt om:", 11.0, 20.0, 13.0, 0.5, key="pauze_eind")
-    eind_tijd = st.slider("Eind tijd:", 7.0, 22.0, 17.0, 0.5, key="eind_tijd_p")
+    with col1:
+        begin_tijd = st.slider("Begin tijd:", 7.0, 21.0, 9.0, 0.5, key="begin_tijd_p")
+        pauze_start = st.slider("Pauze begint om:", 11.0, 20.0, 12.0, 0.5, key="pauze_start")
+    with col2:
+        pauze_eind = st.slider("Pauze eindigt om:", 11.0, 20.0, 13.0, 0.5, key="pauze_eind")
+        eind_tijd = st.slider("Eind tijd:", 7.0, 22.0, 17.0, 0.5, key="eind_tijd_p")
 
     if st.button("Voeg uren toe"):
         if st.session_state["dag_naam"]:
@@ -67,8 +86,10 @@ if dag_type == "Met pauze":
         else:
             st.error("Selecteer eerst een datum!")
 else:
-    begin_tijd = st.slider("Begin tijd:", 7.0, 21.0, 15.0, 0.5, key="begin_tijd_np")
-    eind_tijd = st.slider("Eind tijd:", 7.0, 21.0, 22.0, 0.5, key="eind_tijd_np")
+    with col1:
+        begin_tijd = st.slider("Begin tijd:", 7.0, 21.0, 15.0, 0.5, key="begin_tijd_np")
+    with col2:
+        eind_tijd = st.slider("Eind tijd:", 7.0, 21.0, 22.0, 0.5, key="eind_tijd_np")
 
     if st.button("Voeg uren toe"):
         if st.session_state["dag_naam"]:
@@ -84,7 +105,6 @@ else:
 # Toon uren
 st.header("Gewerkte Uren")
 show_uren()
-
 
 # Reset gegevens
 st.header("Reset gegevens")
