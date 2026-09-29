@@ -21,7 +21,7 @@ STANDAARD_INSTELLINGEN = {
     "pauze_van": "12:00",
     "pauze_tot": "13:00",
     "pauze_weekdagen": [5],
-    "laatst_gemeld": None,
+    "laatst_gemeld": "2026-09-25",  # laatste dag in de urenmail van september 2026
 }
 
 

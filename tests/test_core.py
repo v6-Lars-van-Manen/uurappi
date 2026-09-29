@@ -106,3 +106,19 @@ def test_standaard_periode():
     # vorige mail t/m 25 sep, vandaag 29 sep -> 26 sep t/m eind oktober
     assert standaard_periode(date(2026, 9, 25), date(2026, 9, 29)) == (date(2026, 9, 26), date(2026, 10, 31))
     assert standaard_periode(None, date(2026, 10, 3)) == (date(2026, 10, 1), date(2026, 10, 31))
+
+
+def test_echte_agenda_oktober():
+    # 'Werken '-afspraken zoals ze in de agenda staan (titel met spatie erachter)
+    tijden = [("20260926T090000", "20260926T170000"), ("20261002T130000", "20261002T170000"),
+              ("20261030T180000", "20261030T210000")]
+    ics = ("BEGIN:VCALENDAR\nVERSION:2.0\n" + "".join(
+        f"BEGIN:VEVENT\nUID:{i}\nSUMMARY:Werken \nDTSTART;TZID=Europe/Amsterdam:{s}\n"
+        f"DTEND;TZID=Europe/Amsterdam:{e}\nEND:VEVENT\n" for i, (s, e) in enumerate(tijden))
+        + "END:VCALENDAR\n").encode()
+    dagen = dagen_uit_agenda(werkblokken(ics, date(2026, 9, 26), date(2026, 10, 31)), PauzeRegel())
+    assert [d.regel() for d in dagen] == [
+        "Za 26 sep 9.00-12.00 13.00-17.00 = 7",
+        "Vr 2 okt 13.00-17.00 = 4",
+        "Vr 30 okt 18.00-21.00 = 3",  # na de wintertijd
+    ]
