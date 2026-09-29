@@ -43,16 +43,19 @@ class Werkdag:
                 f.append("pauze valt niet binnen de werktijd")
         return f
 
+    def kop(self) -> str:
+        d = self.datum
+        return f"{DAGEN[d.weekday()]} {d.day} {MAANDEN_KORT[d.month - 1]}"
+
+    def tijden(self) -> str:
+        if self.heeft_pauze():
+            return (f"{tijd_tekst(self.begin)}-{tijd_tekst(self.pauze_van)} "
+                    f"{tijd_tekst(self.pauze_tot)}-{tijd_tekst(self.eind)}")
+        return f"{tijd_tekst(self.begin)}-{tijd_tekst(self.eind)}"
+
     def regel(self) -> str:
         """Regel zoals in de mail, bijv. 'Za 29 aug 9.00-12.00 13.00-17.00 = 7'."""
-        d = self.datum
-        kop = f"{DAGEN[d.weekday()]} {d.day} {MAANDEN_KORT[d.month - 1]}"
-        if self.heeft_pauze():
-            tijden = (f"{tijd_tekst(self.begin)}-{tijd_tekst(self.pauze_van)} "
-                      f"{tijd_tekst(self.pauze_tot)}-{tijd_tekst(self.eind)}")
-        else:
-            tijden = f"{tijd_tekst(self.begin)}-{tijd_tekst(self.eind)}"
-        return f"{kop} {tijden} = {uren_tekst(self.uren())}"
+        return f"{self.kop()} {self.tijden()} = {uren_tekst(self.uren())}"
 
     def naar_dict(self) -> dict:
         return {

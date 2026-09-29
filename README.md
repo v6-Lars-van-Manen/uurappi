@@ -16,8 +16,22 @@ Streamlit-app om je gewerkte uren bij te houden en de maandelijkse urenmail voor
 
 ## Agenda koppelen
 
-Google Agenda → Instellingen → kies je agenda → *Geheim adres in iCal-indeling*. Plak die link in de
-instellingen van de app. Zonder link kun je ook een `.ics`-export uploaden.
+Google Agenda → Instellingen → kies je agenda → *Geheim adres in iCal-indeling*. Plak die link bij
+*Instellingen* in de app, of zet hem als `ICAL_URL` in de secrets (zie hieronder). Zonder link kun je
+ook een `.ics`-export uploaden.
+
+## Op je telefoon
+
+1. Ga naar [share.streamlit.io](https://share.streamlit.io) en log in met GitHub.
+2. Klik op *Create app*, kies repo `v6-Lars-van-Manen/uurappi`, branch `main` en bestand `uurappi.py`.
+3. Kies onder *Advanced settings → Secrets* en plak:
+   ```toml
+   ICAL_URL = "https://calendar.google.com/calendar/ical/.../basic.ics"
+   ```
+4. Deploy. Zet het app-adres onder *Settings → Sharing* op alleen jouw e-mailadres, zodat niemand anders
+   je uren ziet.
+5. Open het adres op je telefoon en kies *Zet op beginscherm* (iPhone: deelknop; Android: menu ⋮).
+   Dan staat de app als icoon tussen je andere apps.
 
 ## Opslag
 
