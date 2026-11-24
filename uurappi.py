@@ -5,7 +5,7 @@ from urllib.parse import quote
 
 import streamlit as st
 
-from uren import agenda
+from uren import agenda, browser
 from uren.core import (DAGEN, MAANDEN_KORT, PauzeRegel, Werkdag, dagen_uit_agenda,
                        mail_onderwerp, mail_tekst, standaard_periode, uren_tekst)
 from uren.opslag import Opslag
@@ -36,18 +36,28 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-opslag = Opslag()
-inst = opslag.instellingen
-
-
-def geheim(naam: str) -> str:
+# ---------------------------------------------------------------- gegevens van deze gebruiker
+# Iedereen bewaart zijn eigen uren en instellingen in zijn eigen browser, zodat
+# collega's dezelfde link kunnen gebruiken zonder elkaars gegevens te zien.
+ss = st.session_state
+geladen = "opslag" in ss
+resultaat = browser.synchroniseer(ss["opslag"].als_json() if geladen else None,
+                                  ss.get("opslag_versie", 0))
+if not geladen:
+    if resultaat is None:
+        st.caption("Even laden…")
+        st.stop()
     try:
-        return st.secrets.get(naam, "")
-    except Exception:  # geen secrets.toml
-        return ""
+        ss["opslag"] = Opslag(resultaat["inhoud"])
+    except ValueError:  # kapotte gegevens: opnieuw beginnen, maar niet stilletjes
+        ss["opslag"] = Opslag()
+        ss["melding"] = "Je opgeslagen gegevens waren onleesbaar; je begint opnieuw."
+    if not resultaat.get("ok", True):
+        ss["melding"] = "Je browser bewaart niets (privévenster?). Je invoer gaat verloren."
 
-
-ical_url = geheim("ICAL_URL") or inst["ical_url"]
+opslag: Opslag = ss["opslag"]
+inst = opslag.instellingen
+ical_url = inst["ical_url"]
 
 
 def tijd(s: str) -> time:
@@ -69,13 +79,51 @@ def nieuwe_versie():
 
 
 def bewaar_en_ververs():
-    opslag.bewaar()
+    """Schrijf naar de browser (bij de volgende run) en ververs de formulieren."""
+    ss["opslag_versie"] = ss.get("opslag_versie", 0) + 1
     nieuwe_versie()
     st.rerun()
 
 
 def korte_datum(d: date) -> str:
     return f"{d.day} {MAANDEN_KORT[d.month - 1]}"
+
+
+# ---------------------------------------------------------------- eerste keer
+if not inst["naam"]:
+    st.markdown("""
+<div class="hero">
+  <div class="titel">Werkuren</div>
+  <div class="periode">Welkom! Stel de app eenmalig in.</div>
+</div>
+""", unsafe_allow_html=True)
+    st.caption("Wat je hier invult blijft op dit apparaat, in deze browser. "
+               "Collega's met dezelfde link zien jouw uren en agenda niet.")
+    with st.form("welkom"):
+        naam = st.text_input("Je naam", placeholder="Voor- en achternaam",
+                             help="Komt onder je urenmail.")
+        ontvanger = st.text_input("Urenmail naar", inst["ontvanger"])
+        aanhef = st.text_input("Aanhef van de mail", inst["aanhef"])
+        url = st.text_input(
+            "Geheime iCal-link van je Google Agenda (mag ook later)", type="password",
+            help="Google Agenda op de computer → Instellingen → je agenda → "
+                 "'Geheim adres in iCal-indeling'. Zie de handleiding.")
+        zoekwoord = st.text_input("Woord in de titel van je werkafspraken", inst["zoekwoord"])
+        if st.form_submit_button("Beginnen", type="primary", use_container_width=True):
+            if not naam.strip():
+                st.error("Vul je naam in.")
+            else:
+                inst.update(naam=naam.strip(), ontvanger=ontvanger.strip(), aanhef=aanhef.strip(),
+                            ical_url=url.strip(), zoekwoord=zoekwoord.strip() or "werken")
+                ss["melding"] = "Klaar! Haal nu je uren uit je agenda."
+                bewaar_en_ververs()
+    with st.expander("Ik heb een back-up", icon=":material/upload:"):
+        backup = st.file_uploader("Zet een back-up terug", type="json", key="welkom-backup")
+        if backup and st.button("Terugzetten", use_container_width=True):
+            opslag.laad(backup.getvalue().decode("utf-8"))
+            ss["melding"] = "Back-up teruggezet."
+            bewaar_en_ververs()
+    st.stop()
 
 
 # ---------------------------------------------------------------- periode en overzicht
@@ -212,13 +260,9 @@ with tab_mail:
 with tab_inst:
     with st.form("instellingen"):
         st.markdown("**Agenda**")
-        if geheim("ICAL_URL"):
-            st.caption("Je agenda-link is ingesteld via de secrets van de app.")
-            url = inst["ical_url"]
-        else:
-            url = st.text_input(
-                "Geheime iCal-link", inst["ical_url"], type="password",
-                help="Google Agenda → Instellingen → je agenda → 'Geheim adres in iCal-indeling'.")
+        url = st.text_input(
+            "Geheime iCal-link", inst["ical_url"], type="password",
+            help="Google Agenda → Instellingen → je agenda → 'Geheim adres in iCal-indeling'.")
         zoekwoord = st.text_input("Titel van werkafspraken", inst["zoekwoord"])
         st.markdown("**Mail**")
         aanhef = st.text_input("Aanhef", inst["aanhef"])
@@ -243,8 +287,16 @@ with tab_inst:
     st.download_button("Download alle uren", opslag.als_json(), icon=":material/download:",
                        file_name=f"uren-{date.today().isoformat()}.json",
                        mime="application/json", use_container_width=True)
-    backup = st.file_uploader("Zet een back-up terug", type="json")
+    backup = st.file_uploader("Zet een back-up terug", type="json", key="inst-backup")
     if backup and st.button("Terugzetten", use_container_width=True):
         opslag.laad(backup.getvalue().decode("utf-8"))
         st.session_state["melding"] = "Back-up teruggezet."
         bewaar_en_ververs()
+
+    st.markdown("**Dit apparaat**")
+    st.caption("Je uren en instellingen staan alleen in deze browser. Download af en toe een "
+               "back-up, zeker voordat je van telefoon wisselt of je browsergeschiedenis wist.")
+    if st.toggle("Ik wil alles op dit apparaat wissen"):
+        if st.button("Alles wissen", icon=":material/delete_forever:", use_container_width=True):
+            ss["opslag"] = Opslag()
+            bewaar_en_ververs()

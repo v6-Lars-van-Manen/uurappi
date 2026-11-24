@@ -122,3 +122,14 @@ def test_echte_agenda_oktober():
         "Vr 2 okt 13.00-17.00 = 4",
         "Vr 30 okt 18.00-21.00 = 3",  # na de wintertijd
     ]
+
+
+def test_opslag_heen_en_terug():
+    from uren.opslag import Opslag
+    leeg = Opslag("")
+    assert leeg.dagen == {} and leeg.instellingen["naam"] == ""
+    leeg.dagen[date(2026, 11, 7)] = d(7, 11, "9:00", "17:00", "12:00", "13:00")
+    leeg.instellingen["naam"] = "Collega"
+    terug = Opslag(leeg.als_json())
+    assert terug.instellingen["naam"] == "Collega"
+    assert terug.in_periode(date(2026, 11, 1), date(2026, 11, 30))[0].uren() == 7
