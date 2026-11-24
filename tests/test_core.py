@@ -133,3 +133,14 @@ def test_csv_tekst():
         "28-08-2026;Vr;09:00;13:30;;;4,5",
         "29-08-2026;Za;09:00;17:00;12:00;13:00;7",
     ]
+
+
+def test_opslag_heen_en_terug():
+    from uren.opslag import Opslag
+    leeg = Opslag("")
+    assert leeg.dagen == {} and leeg.instellingen["naam"] == ""
+    leeg.dagen[date(2026, 11, 7)] = d(7, 11, "9:00", "17:00", "12:00", "13:00")
+    leeg.instellingen["naam"] = "Collega"
+    terug = Opslag(leeg.als_json())
+    assert terug.instellingen["naam"] == "Collega"
+    assert terug.in_periode(date(2026, 11, 1), date(2026, 11, 30))[0].uren() == 7
