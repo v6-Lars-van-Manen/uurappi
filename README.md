@@ -17,26 +17,30 @@ Streamlit-app om je gewerkte uren bij te houden en de maandelijkse urenmail voor
 ## Agenda koppelen
 
 Google Agenda → Instellingen → kies je agenda → *Geheim adres in iCal-indeling*. Plak die link bij
-*Instellingen* in de app, of zet hem als `ICAL_URL` in de secrets (zie hieronder). Zonder link kun je
-ook een `.ics`-export uploaden.
+*Instellingen* in de app. Zonder link kun je ook een `.ics`-export uploaden.
 
-## Op je telefoon
+## Delen met collega's
+
+Iedereen gebruikt dezelfde link. Bij het eerste bezoek vult iemand zijn naam, ontvanger en eigen
+iCal-link in. Alles wordt bewaard in de browser van die persoon (`localStorage`, zie `uren/browser.py`),
+niet op de server, dus niemand ziet de uren of agenda van een ander. Uitleg voor collega's staat in
+[HANDLEIDING.md](HANDLEIDING.md).
+
+## Online zetten (Streamlit Community Cloud)
 
 1. Ga naar [share.streamlit.io](https://share.streamlit.io) en log in met GitHub.
 2. Klik op *Create app*, kies repo `v6-Lars-van-Manen/uurappi`, branch `main` en bestand `uurappi.py`.
-3. Kies onder *Advanced settings → Secrets* en plak:
-   ```toml
-   ICAL_URL = "https://calendar.google.com/calendar/ical/.../basic.ics"
-   ```
-4. Deploy. Zet het app-adres onder *Settings → Sharing* op alleen jouw e-mailadres, zodat niemand anders
-   je uren ziet.
+3. Zet onder *Settings → Sharing* de app op **Public**, zodat collega's hem zonder account kunnen openen.
+   Zet geen persoonlijke agenda-link in de secrets: de app gebruikt die niet meer, omdat iedereen met de
+   link hem anders zou krijgen.
+4. Optioneel: kies onder *Settings → General* een makkelijk adres, bijv. `werkuren-hvm.streamlit.app`.
 5. Open het adres op je telefoon en kies *Zet op beginscherm* (iPhone: deelknop; Android: menu ⋮).
-   Dan staat de app als icoon tussen je andere apps.
 
 ## Opslag
 
-Alles wordt bewaard in `data/uren.json` (pad aan te passen met `UURAPPI_DATA`). Op Streamlit Community
-Cloud gaat dat bestand verloren bij een herstart, dus download af en toe een back-up via de zijbalk.
+Uren en instellingen staan in de browser van de gebruiker, per apparaat. Ze blijven bewaard als de app
+op de server herstart, maar gaan verloren als je browsergegevens wist. Download daarom af en toe een
+back-up via *Instellingen*.
 
 ## Draaien en testen
 
