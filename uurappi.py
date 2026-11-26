@@ -106,9 +106,10 @@ if not inst["naam"]:
         ontvanger = st.text_input("Urenmail naar", inst["ontvanger"])
         aanhef = st.text_input("Aanhef van de mail", inst["aanhef"])
         url = st.text_input(
-            "Geheime iCal-link van je Google Agenda (mag ook later)", type="password",
+            "Agenda-link van Google of iCloud (mag ook later)", type="password",
             help="Google Agenda op de computer → Instellingen → je agenda → "
-                 "'Geheim adres in iCal-indeling'. Zie de handleiding.")
+                 "'Geheim adres in iCal-indeling'. iPhone: Agenda → Agenda's → (i) bij je "
+                 "agenda → 'Openbare agenda' aan → 'Deel link'. Zie de handleiding.")
         zoekwoord = st.text_input("Woord in de titel van je werkafspraken", inst["zoekwoord"])
         if st.form_submit_button("Beginnen", type="primary", use_container_width=True):
             if not naam.strip():
@@ -254,8 +255,10 @@ with tab_inst:
     with st.form("instellingen"):
         st.markdown("**Agenda**")
         url = st.text_input(
-            "Geheime iCal-link", inst["ical_url"], type="password",
-            help="Google Agenda → Instellingen → je agenda → 'Geheim adres in iCal-indeling'.")
+            "Agenda-link (Google of iCloud)", inst["ical_url"], type="password",
+            help="Google Agenda → Instellingen → je agenda → 'Geheim adres in iCal-indeling'. "
+                 "iCloud: Agenda → (i) bij je agenda → 'Openbare agenda' → 'Deel link'. "
+                 "Een webcal://-link mag gewoon.")
         zoekwoord = st.text_input("Titel van werkafspraken", inst["zoekwoord"])
         st.markdown("**Mail**")
         aanhef = st.text_input("Aanhef", inst["aanhef"])

@@ -145,3 +145,72 @@ def test_opslag_heen_en_terug():
     terug = Opslag(leeg.als_json())
     assert terug.instellingen["naam"] == "Collega"
     assert terug.in_periode(date(2026, 11, 1), date(2026, 11, 30))[0].uren() == 7
+
+
+ICLOUD_ICS = b"""BEGIN:VCALENDAR\r
+VERSION:2.0\r
+PRODID:-//Apple Inc.//iPhone OS 18.0//EN\r
+X-WR-CALNAME:Werk\r
+BEGIN:VTIMEZONE\r
+TZID:Europe/Amsterdam\r
+BEGIN:STANDARD\r
+DTSTART:19961027T030000\r
+RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU\r
+TZOFFSETFROM:+0200\r
+TZOFFSETTO:+0100\r
+END:STANDARD\r
+BEGIN:DAYLIGHT\r
+DTSTART:19810329T020000\r
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU\r
+TZOFFSETFROM:+0100\r
+TZOFFSETTO:+0200\r
+END:DAYLIGHT\r
+END:VTIMEZONE\r
+BEGIN:VEVENT\r
+UID:a@icloud\r
+DTSTART;TZID=Europe/Amsterdam:20261107T090000\r
+DURATION:PT8H\r
+SUMMARY:Werken\r
+END:VEVENT\r
+BEGIN:VEVENT\r
+UID:b@icloud\r
+DTSTART:20261113T140000\r
+DTEND:20261113T220000\r
+SUMMARY:WERKEN \r
+END:VEVENT\r
+BEGIN:VEVENT\r
+UID:c@icloud\r
+DTSTART:20261114T080000Z\r
+DTEND:20261114T160000Z\r
+SUMMARY:Werken\r
+END:VEVENT\r
+BEGIN:VEVENT\r
+UID:d@icloud\r
+DTSTART;VALUE=DATE:20261115\r
+DTEND;VALUE=DATE:20261116\r
+SUMMARY:Werken\r
+END:VEVENT\r
+END:VCALENDAR\r
+"""
+
+
+def test_icloud_agenda():
+    # iCloud: TZID met eigen VTIMEZONE, DURATION i.p.v. DTEND, zwevende tijden, UTC
+    blokken = werkblokken(ICLOUD_ICS, date(2026, 11, 1), date(2026, 11, 30))
+    assert blokken == [
+        (datetime(2026, 11, 7, 9), datetime(2026, 11, 7, 17)),
+        (datetime(2026, 11, 13, 14), datetime(2026, 11, 13, 22)),
+        (datetime(2026, 11, 14, 9), datetime(2026, 11, 14, 17)),
+    ]
+
+
+def test_webcal_links():
+    from uren.agenda import maak_https
+    assert maak_https(" webcal://p52-caldav.icloud.com/published/2/abc ") == \
+        "https://p52-caldav.icloud.com/published/2/abc"
+    assert maak_https("WEBCAL://x.nl/a.ics") == "https://x.nl/a.ics"
+    assert maak_https("webcals://x.nl/a.ics") == "https://x.nl/a.ics"
+    assert maak_https("p52-caldav.icloud.com/published/2/abc") == \
+        "https://p52-caldav.icloud.com/published/2/abc"
+    assert maak_https("https://calendar.google.com/x/basic.ics") == \
+        "https://calendar.google.com/x/basic.ics"
