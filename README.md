@@ -4,7 +4,7 @@ Streamlit-app om je gewerkte uren bij te houden en de maandelijkse urenmail voor
 
 ## Zo werkt het
 
-1. **Concept uit je agenda.** De app haalt alle afspraken met `werken` in de titel uit je Google Agenda
+1. **Concept uit je agenda.** De app haalt alle afspraken met `werken` in de titel uit je Google- of iCloud-agenda
    voor de gekozen maand (van de dag na de laatste vrijdag van vorige maand t/m de laatste vrijdag
    van deze maand, want dan lever je je uren in). Twee afspraken op één dag (bijv. 9-12 en 13-17) worden één dag met pauze.
    Op zaterdag komt er standaard een pauze van 12:00 tot 13:00 bij (aan te passen in de instellingen).
@@ -17,7 +17,12 @@ Streamlit-app om je gewerkte uren bij te houden en de maandelijkse urenmail voor
 ## Agenda koppelen
 
 Google Agenda → Instellingen → kies je agenda → *Geheim adres in iCal-indeling*. Plak die link bij
-*Instellingen* in de app. Zonder link kun je ook een `.ics`-export uploaden.
+*Instellingen* in de app.
+
+iCloud (iPhone): Agenda → *Agenda's* → (i) bij je agenda → *Openbare agenda* aan → *Deel link*. De
+`webcal://`-link mag zo geplakt worden; de app maakt er zelf `https://` van (`uren/agenda.py`).
+
+Zonder link kun je ook een `.ics`-export uploaden.
 
 ## Delen met collega's
 

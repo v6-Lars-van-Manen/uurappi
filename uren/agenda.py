@@ -1,4 +1,4 @@
-"""'werken'-afspraken uit een Google Agenda (iCal-link of .ics-bestand) halen."""
+"""'werken'-afspraken uit een Google- of iCloud-agenda (iCal-link of .ics-bestand) halen."""
 
 from __future__ import annotations
 
@@ -12,12 +12,29 @@ import requests
 TZ = ZoneInfo("Europe/Amsterdam")
 
 
+def maak_https(url: str) -> str:
+    """Agenda-apps geven vaak een webcal://-link (Google, iCloud: 'Openbare agenda');
+    requests kan alleen http(s). Werkt ook voor WEBCAL://, webcals:// en een link
+    zonder begin."""
+    url = url.strip()
+    schema, _, rest = url.partition("://")
+    if not rest:
+        return "https://" + url
+    if schema.lower() in ("webcal", "webcals"):
+        return "https://" + rest
+    return url
+
+
 def haal_ics(url: str) -> bytes:
-    # Google toont webcal://; requests kan alleen http(s).
-    if url.startswith("webcal://"):
-        url = "https://" + url[len("webcal://"):]
-    antwoord = requests.get(url, timeout=15)
+    # iCloud stuurt soms door naar een andere pXX-caldav-server; requests volgt dat.
+    antwoord = requests.get(maak_https(url), timeout=20,
+                            headers={"User-Agent": "Mozilla/5.0 (uurappi)"})
+    if antwoord.status_code in (403, 404):
+        raise ValueError("de agenda-link werkt niet (meer). Staat 'Openbare agenda' "
+                         "(iCloud) of het geheime adres (Google) nog aan?")
     antwoord.raise_for_status()
+    if b"BEGIN:VCALENDAR" not in antwoord.content[:2000]:
+        raise ValueError("deze link geeft geen agenda terug. Kopieer de link opnieuw.")
     return antwoord.content
 
 

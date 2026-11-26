@@ -1,7 +1,7 @@
 # Handleiding Werkuren-app
 
 Met deze app houd je je gewerkte uren bij en maak je in een paar tikken de maandelijkse urenmail voor
-Marinus. De app haalt je werkdagen uit je Google Agenda, jij past aan wat nodig is, en de mail staat klaar.
+Marinus. De app haalt je werkdagen uit je Google- of iCloud-agenda, jij past aan wat nodig is, en de mail staat klaar.
 
 **Link naar de app:** `<link volgt van Lars>`
 
@@ -31,13 +31,15 @@ De eerste keer vraagt de app om:
 
 - **Je naam**: komt onder de mail.
 - **Urenmail naar** en **Aanhef**: staan al goed voor Marinus, pas ze aan als dat nodig is.
-- **Geheime iCal-link**: zie stap 3. Mag je ook later invullen bij *Instellingen*.
+- **Agenda-link van Google of iCloud**: zie stap 3. Mag je ook later invullen bij *Instellingen*.
 - **Woord in de titel van je werkafspraken**: standaard `werken`. Alle afspraken in je agenda met dat
   woord in de titel tellen als werktijd.
 
 Tik op **Beginnen**.
 
-## 3. Je Google Agenda koppelen
+## 3. Je agenda koppelen
+
+### Google Agenda
 
 Dit gaat het makkelijkst op een computer (in de Google Agenda-app op je telefoon kan het niet).
 
@@ -45,10 +47,21 @@ Dit gaat het makkelijkst op een computer (in de Google Agenda-app op je telefoon
 2. Klik rechtsboven op het tandwiel → **Instellingen**.
 3. Klik links onder *Instellingen voor mijn agenda's* op de agenda waarin je je werktijden zet.
 4. Scroll naar **Geheim adres in iCal-indeling** en kopieer die link (hij eindigt op `basic.ics`).
-5. Plak hem in de app bij **Instellingen → Geheime iCal-link** en tik op *Opslaan*.
+5. Plak hem in de app bij **Instellingen → Agenda-link** en tik op *Opslaan*.
    Tip: mail of app de link naar jezelf, dan kun je hem op je telefoon plakken.
 
 Deel deze link met niemand: wie hem heeft, kan je hele agenda lezen.
+
+### iCloud-agenda (iPhone)
+
+1. Open de app **Agenda** en tik onderaan op **Agenda's**.
+2. Tik op het **(i)** naast de iCloud-agenda waarin je je werktijden zet.
+3. Zet **Openbare agenda** aan en tik op **Deel link… → Kopieer**.
+4. Plak de link in de app bij **Instellingen → Agenda-link** en tik op *Opslaan*. De link begint met
+   `webcal://`; dat is goed, de app snapt die.
+
+Let op: met *Openbare agenda* kan iedereen met de link die agenda lezen. Zet je werktijden daarom het
+liefst in een aparte agenda (bijv. *Werk*) en deel alleen die.
 
 Geen zin om te koppelen? Dan kun je bij *Dagen* ook een `.ics`-export uploaden, of je dagen met de hand
 toevoegen.
@@ -78,8 +91,9 @@ nieuwe telefoon, of was je je gegevens kwijt? Kies dan *Zet een back-up terug* (
 
 ## Problemen?
 
-- **"Agenda lezen lukte niet"**: controleer of je de *geheime* iCal-link hebt geplakt (niet het
-  openbare adres) en of je internet hebt.
+- **"Agenda lezen lukte niet"**: bij Google: controleer of je de *geheime* iCal-link hebt geplakt
+  (niet het openbare adres). Bij iCloud: staat *Openbare agenda* nog aan? Zet je hem uit en weer aan,
+  dan krijg je een nieuwe link. En heb je internet?
 - **Er komen geen dagen uit de agenda**: staat het woord (standaard `werken`) in de titel van je
   afspraken? En klopt de periode?
 - **Ik ben alles kwijt**: waarschijnlijk een andere browser, een privévenster of gewiste
