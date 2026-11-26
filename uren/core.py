@@ -156,18 +156,34 @@ def csv_tekst(dagen: list[Werkdag]) -> str:
     return "\n".join(regels) + "\n"
 
 
-def standaard_periode(laatst_gemeld: date | None, vandaag: date) -> tuple[date, date]:
-    """Periode vanaf de dag na de laatst gemelde werkdag t/m het einde van de maand.
+def laatste_vrijdag(jaar: int, maand: int) -> date:
+    """De laatste vrijdag van de maand: dan lever je je uren in."""
+    d = _einde_maand(date(jaar, maand, 1))
+    return d - timedelta(days=(d.weekday() - 4) % 7)
 
-    Zonder eerdere melding is het de huidige maand. Valt het begin in de laatste
-    tien dagen van de maand, dan loopt de periode door tot het eind van de
-    volgende maand (je mailt vaak al rond de 25e).
+
+def vorige_maand(jaar: int, maand: int) -> tuple[int, int]:
+    return (jaar - 1, 12) if maand == 1 else (jaar, maand - 1)
+
+
+def volgende_maand(jaar: int, maand: int) -> tuple[int, int]:
+    return (jaar + 1, 1) if maand == 12 else (jaar, maand + 1)
+
+
+def maand_periode(jaar: int, maand: int) -> tuple[date, date]:
+    """Van de dag na de laatste vrijdag van vorige maand t/m de laatste vrijdag van deze maand.
+
+    Werk je na de laatste vrijdag nog (bijv. op zaterdag), dan telt dat voor de volgende maand.
     """
-    begin = laatst_gemeld + timedelta(days=1) if laatst_gemeld else vandaag.replace(day=1)
-    eind = _einde_maand(max(begin, vandaag))
-    if (eind - begin).days < 10:
-        eind = _einde_maand(eind + timedelta(days=1))
-    return begin, eind
+    begin = laatste_vrijdag(*vorige_maand(jaar, maand)) + timedelta(days=1)
+    return begin, laatste_vrijdag(jaar, maand)
+
+
+def huidige_maand(vandaag: date) -> tuple[int, int]:
+    """De maand waarvoor je nu uren inlevert; na de laatste vrijdag is dat de volgende maand."""
+    if vandaag > laatste_vrijdag(vandaag.year, vandaag.month):
+        return volgende_maand(vandaag.year, vandaag.month)
+    return vandaag.year, vandaag.month
 
 
 def _einde_maand(d: date) -> date:

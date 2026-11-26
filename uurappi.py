@@ -6,8 +6,9 @@ from urllib.parse import quote
 import streamlit as st
 
 from uren import agenda, browser
-from uren.core import (DAGEN, MAANDEN_KORT, PauzeRegel, Werkdag, csv_tekst,
-                       dagen_uit_agenda, mail_onderwerp, mail_tekst, standaard_periode, uren_tekst)
+from uren.core import (DAGEN, MAANDEN_KORT, MAANDEN_LANG, PauzeRegel, Werkdag, csv_tekst,
+                       dagen_uit_agenda, huidige_maand, maand_periode, mail_onderwerp,
+                       mail_tekst, uren_tekst, vorige_maand, volgende_maand)
 from uren.opslag import Opslag
 
 st.set_page_config(page_title="Werkuren", page_icon="🕘", layout="centered",
@@ -127,17 +128,23 @@ if not inst["naam"]:
 
 
 # ---------------------------------------------------------------- periode en overzicht
-laatst = date.fromisoformat(inst["laatst_gemeld"]) if inst["laatst_gemeld"] else None
-std_begin, std_eind = standaard_periode(laatst, date.today())
-begin = st.session_state.get("begin", std_begin)
-eind = st.session_state.get("eind", std_eind)
+# Je levert je uren in op de laatste vrijdag van de maand; kies alleen de maand.
+nu = huidige_maand(date.today())
+maanden = [nu]
+for _ in range(12):
+    maanden.append(vorige_maand(*maanden[-1]))
+maanden = [volgende_maand(*nu)] + maanden
+jaar, maand = st.selectbox(
+    "Maand", maanden, index=1, key="maand",
+    format_func=lambda m: f"{MAANDEN_LANG[m[1] - 1].capitalize()} {m[0]}")
+begin, eind = maand_periode(jaar, maand)
 dagen = opslag.in_periode(begin, eind)
 totaal = sum(d.uren() for d in dagen)
 
 st.markdown(f"""
 <div class="hero">
-  <div class="titel">Werkuren</div>
-  <div class="periode">{korte_datum(begin)} t/m {korte_datum(eind)} {eind.year}</div>
+  <div class="titel">Werkuren · inleveren vr {korte_datum(eind)}</div>
+  <div class="periode">za {korte_datum(begin)} t/m vr {korte_datum(eind)} {eind.year}</div>
   <div class="stats">
     <div><span class="num">{len(dagen)}</span><span class="lbl">dagen</span></div>
     <div><span class="num">{uren_tekst(totaal)}</span><span class="lbl">uur</span></div>
@@ -149,14 +156,8 @@ tab_dagen, tab_mail, tab_inst = st.tabs(["Dagen", "Mail", "Instellingen"])
 
 # ---------------------------------------------------------------- dagen
 with tab_dagen:
-    with st.expander("Periode wijzigen", icon=":material/date_range:"):
-        c1, c2 = st.columns(2)
-        st.session_state["begin"] = c1.date_input("Van", begin, format="DD-MM-YYYY")
-        st.session_state["eind"] = c2.date_input("Tot en met", eind, format="DD-MM-YYYY")
-        if laatst:
-            st.caption(f"Laatst gemelde werkdag: {korte_datum(laatst)} {laatst.year}")
-        if (st.session_state["begin"], st.session_state["eind"]) != (begin, eind):
-            st.rerun()
+    st.caption("De maand loopt van de dag na de laatste vrijdag van vorige maand t/m de laatste "
+               "vrijdag van deze maand. Werk je daarna nog, dan telt dat voor de volgende maand.")
 
     ics_bestand = None
     if not ical_url:
@@ -239,7 +240,6 @@ with tab_mail:
     if not dagen:
         st.markdown("Voeg eerst dagen toe.")
     else:
-        maand = dagen[-1].datum.month
         onderwerp = mail_onderwerp(maand)
         tekst = mail_tekst(dagen, maand, inst["aanhef"], inst["naam"])
         st.markdown(f"**Aan:** {inst['ontvanger']}  \n**Onderwerp:** {onderwerp}")
@@ -248,13 +248,6 @@ with tab_mail:
         mailto = f"mailto:{inst['ontvanger']}?subject={quote(onderwerp)}&body={quote(tekst)}"
         st.link_button("Open in je mail-app", mailto, type="primary", icon=":material/mail:",
                        use_container_width=True)
-        if st.button("Markeer als verstuurd", icon=":material/done_all:", use_container_width=True,
-                     help="De volgende periode begint dan na de laatste dag in deze lijst."):
-            inst["laatst_gemeld"] = dagen[-1].datum.isoformat()
-            st.session_state.pop("begin", None)
-            st.session_state.pop("eind", None)
-            st.session_state["melding"] = "Gemarkeerd als verstuurd. De volgende periode staat klaar."
-            bewaar_en_ververs()
         st.download_button("Download als CSV (Excel)", "\ufeff" + csv_tekst(dagen),
                            icon=":material/table:", mime="text/csv", use_container_width=True,
                            file_name=f"uren-{begin.isoformat()}-tm-{eind.isoformat()}.csv")

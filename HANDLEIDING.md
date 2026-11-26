@@ -60,14 +60,15 @@ afspraak hebt (aan te passen bij *Instellingen*).
 
 ## 4. Elke maand je uren doorgeven
 
-1. **Dagen**: tik op **Concept uit agenda halen**. Je werkdagen van deze periode verschijnen.
+Je levert je uren altijd in op de **laatste vrijdag van de maand**. Kies bovenaan de **maand**; de app
+zet de juiste periode klaar: van de zaterdag na de laatste vrijdag van vorige maand t/m de laatste
+vrijdag van deze maand. Werk je na de laatste vrijdag nog, dan telt dat voor de volgende maand.
+
+1. **Dagen**: tik op **Concept uit agenda halen**. Je werkdagen van deze maand verschijnen.
    - Tik op een dag om tijden of pauze aan te passen, of hem te verwijderen.
    - Mist er een dag? Tik op **Dag toevoegen**.
-   - Andere periode nodig? Tik op **Periode wijzigen**.
 2. **Mail**: controleer de tekst. Tik op **Open in je mail-app** (of kopieer de tekst met het knopje
    rechtsboven) en verstuur de mail.
-3. Tik daarna op **Markeer als verstuurd**. De volgende keer begint de periode vanzelf op de dag na je
-   laatst gemelde werkdag.
 
 ## Back-up
 

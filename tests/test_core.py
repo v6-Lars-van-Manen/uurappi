@@ -1,8 +1,8 @@
 from datetime import date, datetime, time
 
 from uren.agenda import werkblokken
-from uren.core import (PauzeRegel, Werkdag, dagen_uit_agenda, mail_tekst,
-                       standaard_periode)
+from uren.core import (PauzeRegel, Werkdag, dagen_uit_agenda, huidige_maand,
+                       laatste_vrijdag, maand_periode, mail_tekst)
 
 SEPTEMBER = """Beste oom Marinus,
 
@@ -102,10 +102,22 @@ END:VCALENDAR"""
     ]
 
 
-def test_standaard_periode():
-    # vorige mail t/m 25 sep, vandaag 29 sep -> 26 sep t/m eind oktober
-    assert standaard_periode(date(2026, 9, 25), date(2026, 9, 29)) == (date(2026, 9, 26), date(2026, 10, 31))
-    assert standaard_periode(None, date(2026, 10, 3)) == (date(2026, 10, 1), date(2026, 10, 31))
+def test_laatste_vrijdag():
+    assert laatste_vrijdag(2026, 11) == date(2026, 11, 27)
+    assert laatste_vrijdag(2026, 10) == date(2026, 10, 30)
+    assert laatste_vrijdag(2026, 7) == date(2026, 7, 31)  # maand eindigt op vrijdag
+
+
+def test_maand_periode():
+    assert maand_periode(2026, 11) == (date(2026, 10, 31), date(2026, 11, 27))
+    assert maand_periode(2027, 1) == (date(2026, 12, 26), date(2027, 1, 29))
+
+
+def test_huidige_maand():
+    assert huidige_maand(date(2026, 11, 25)) == (2026, 11)
+    assert huidige_maand(date(2026, 11, 27)) == (2026, 11)  # inleverdag zelf
+    assert huidige_maand(date(2026, 11, 28)) == (2026, 12)
+    assert huidige_maand(date(2026, 12, 31)) == (2027, 1)
 
 
 def test_echte_agenda_oktober():
