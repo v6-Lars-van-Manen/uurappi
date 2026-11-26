@@ -6,7 +6,7 @@ from urllib.parse import quote
 import streamlit as st
 
 from uren import agenda, browser
-from uren.core import (DAGEN, MAANDEN_KORT, MAANDEN_LANG, PauzeRegel, Werkdag,
+from uren.core import (DAGEN, MAANDEN_KORT, MAANDEN_LANG, PauzeRegel, Werkdag, csv_tekst,
                        dagen_uit_agenda, huidige_maand, maand_periode, mail_onderwerp,
                        mail_tekst, uren_tekst, vorige_maand, volgende_maand)
 from uren.opslag import Opslag
@@ -248,6 +248,9 @@ with tab_mail:
         mailto = f"mailto:{inst['ontvanger']}?subject={quote(onderwerp)}&body={quote(tekst)}"
         st.link_button("Open in je mail-app", mailto, type="primary", icon=":material/mail:",
                        use_container_width=True)
+        st.download_button("Download als CSV (Excel)", "\ufeff" + csv_tekst(dagen),
+                           icon=":material/table:", mime="text/csv", use_container_width=True,
+                           file_name=f"uren-{begin.isoformat()}-tm-{eind.isoformat()}.csv")
 
 # ---------------------------------------------------------------- instellingen
 with tab_inst:
@@ -269,12 +272,15 @@ with tab_inst:
         weekdagen = st.multiselect("Op", list(range(7)), inst["pauze_weekdagen"],
                                    format_func=lambda i: DAGEN[i])
         if st.form_submit_button("Opslaan", type="primary", use_container_width=True):
-            inst.update(ical_url=url.strip(), zoekwoord=zoekwoord, aanhef=aanhef,
-                        naam=naam, ontvanger=ontvanger, pauze_aan=pauze_aan,
-                        pauze_van=pauze_van.strftime("%H:%M"),
-                        pauze_tot=pauze_tot.strftime("%H:%M"), pauze_weekdagen=weekdagen)
-            st.session_state["melding"] = "Instellingen opgeslagen."
-            bewaar_en_ververs()
+            if pauze_aan and pauze_tot <= pauze_van:
+                st.error("Niet opgeslagen: de standaardpauze eindigt niet na het begin.")
+            else:
+                inst.update(ical_url=url.strip(), zoekwoord=zoekwoord, aanhef=aanhef,
+                            naam=naam, ontvanger=ontvanger, pauze_aan=pauze_aan,
+                            pauze_van=pauze_van.strftime("%H:%M"),
+                            pauze_tot=pauze_tot.strftime("%H:%M"), pauze_weekdagen=weekdagen)
+                st.session_state["melding"] = "Instellingen opgeslagen."
+                bewaar_en_ververs()
 
     st.markdown("**Back-up**")
     st.download_button("Download alle uren", opslag.als_json(), icon=":material/download:",
@@ -282,9 +288,13 @@ with tab_inst:
                        mime="application/json", use_container_width=True)
     backup = st.file_uploader("Zet een back-up terug", type="json", key="inst-backup")
     if backup and st.button("Terugzetten", use_container_width=True):
-        opslag.laad(backup.getvalue().decode("utf-8"))
-        st.session_state["melding"] = "Back-up teruggezet."
-        bewaar_en_ververs()
+        try:
+            opslag.laad(backup.getvalue().decode("utf-8"))
+        except Exception:  # geen geldig back-upbestand
+            st.error("Dit bestand is geen geldige back-up van de app; er is niets veranderd.")
+        else:
+            st.session_state["melding"] = "Back-up teruggezet."
+            bewaar_en_ververs()
 
     st.markdown("**Dit apparaat**")
     st.caption("Je uren en instellingen staan alleen in deze browser. Download af en toe een "

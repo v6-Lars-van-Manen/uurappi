@@ -136,6 +136,17 @@ def test_echte_agenda_oktober():
     ]
 
 
+def test_csv_tekst():
+    from uren.core import csv_tekst
+    dagen = [Werkdag(date(2026, 8, 29), time(9), time(17), time(12), time(13)),
+             Werkdag(date(2026, 8, 28), time(9), time(13, 30))]
+    assert csv_tekst(dagen).splitlines() == [
+        "datum;dag;begin;eind;pauze van;pauze tot;uren",
+        "28-08-2026;Vr;09:00;13:30;;;4,5",
+        "29-08-2026;Za;09:00;17:00;12:00;13:00;7",
+    ]
+
+
 def test_opslag_heen_en_terug():
     from uren.opslag import Opslag
     leeg = Opslag("")

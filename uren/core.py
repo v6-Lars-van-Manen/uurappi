@@ -144,6 +144,18 @@ def mail_tekst(dagen: list[Werkdag], maand: int, aanhef: str, naam: str) -> str:
             f"{naam}")
 
 
+def csv_tekst(dagen: list[Werkdag]) -> str:
+    """Dagen als CSV (puntkomma's en decimale komma, zodat Excel het direct opent)."""
+    regels = ["datum;dag;begin;eind;pauze van;pauze tot;uren"]
+    for d in sorted(dagen, key=lambda d: d.datum):
+        pv = d.pauze_van.strftime("%H:%M") if d.pauze_van else ""
+        pt = d.pauze_tot.strftime("%H:%M") if d.pauze_tot else ""
+        regels.append(";".join([d.datum.strftime("%d-%m-%Y"), DAGEN[d.datum.weekday()],
+                                d.begin.strftime("%H:%M"), d.eind.strftime("%H:%M"), pv, pt,
+                                uren_tekst(d.uren()).replace(".", ",")]))
+    return "\n".join(regels) + "\n"
+
+
 def laatste_vrijdag(jaar: int, maand: int) -> date:
     """De laatste vrijdag van de maand: dan lever je je uren in."""
     d = _einde_maand(date(jaar, maand, 1))
